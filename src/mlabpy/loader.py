@@ -8,30 +8,58 @@ Copyright (C) 2015, led02 <mlabpy@led-inc.eu>
 '''
 import ast
 import os
+import sys
 from importlib.abc import Finder, Loader
 
 import mlabpy
-from mlabpy import lexer, parser
+from mlabpy import conf, lexer, parser
 
-OUTPUT_TREE = False
 
 class MatLabFinder(Finder):
+    """
+    Implements ``finder`` protocol to be added to ``sys.meta_path``.
+    """
+    
     def __init__(self):
         self._parser = parser.new()
-        
+    
     def find_module(self, fullname, path=None):
+        """
+        Load .m files from package or from ``sys.path``.
+        """
+        # TODO find_spec
         if path is not None:
-            modname = fullname.split('.')
-            filepath = os.path.join(path[0], modname[-1] + '.m')
+            # path is set -> we are in a package
+            modname = fullname.split('.')[-1]
+        else:
+            # not in package -> search cwd and sys.path
+            modname = fullname
+            path = ['.'] + sys.path
+        
+        filename = modname + '.m'
+        for dirname in path:
+            filepath = os.path.join(dirname, filename)
             if os.path.exists(filepath):
+                if conf.DEBUG:
+                    print("* Loading {0} from {1}...".format(modname, filepath))
                 return MatlabLoader(self._parser, filepath)
 
 class MatlabLoader(Loader):
+    """
+    Implements ``loader`` protocol to load .m files discovered by ``MatLabFinder``.
+    """
+    
     def __init__(self, parser, filepath):
+        """
+        ``parser`` is a ``ply.yacc`` parser instance. ``filename`` is the .m file to be loaded. 
+        """
         self._parser = parser
         self._filepath = filepath
     
     def _get_imports(self):
+        """
+        Create ``ast.Import`` nodes for ``mlabpy.autoload``.
+        """
         imports = []
         for modname in mlabpy.autoload:
             import_node = ast.ImportFrom(modname, [ast.alias('*', None)], 0)
@@ -41,6 +69,10 @@ class MatlabLoader(Loader):
         return imports
 
     def exec_module(self, module):
+        """
+        Read the source from ``_filepath``, try to parse it and finally
+        compile the AST to a Python module.
+        """
         module.__file__ = self._filepath
         
         buf = open(self._filepath, 'r').read()
@@ -48,15 +80,20 @@ class MatlabLoader(Loader):
              + self._parser.parse(buf, lexer=lexer.new())
         
         mod = ast.Module(tree)
-        if OUTPUT_TREE:
+        if conf.LOADER_DUMP_TREE:
             parser.dump(mod, outfile=open(self._filepath + '.ast', 'w'))
         
         code = compile(mod, filename=self._filepath, mode="exec")
         exec(code, module.__dict__, module.__dict__)
 
+# Stores the loader for re-use
 _matlab_loader = None
 
 def enable_matlab_import():
+    """
+    Enable MlibPy's automatic import support. This method should be called
+    before attempting to import any matlab modules.
+    """
     import sys
     global _matlab_loader
     

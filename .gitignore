@@ -52,3 +52,10 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# PLY parser tables
+mlab_*.py
+
+# foo
+foo*
+

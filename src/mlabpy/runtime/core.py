@@ -13,9 +13,10 @@ import time
 
 import numpy
 from numpy import identity as eye, mean, median, prod, roots, std
-from math import trunc
 
-OCTAVE_VERSION = '0.1'
+import mlabpy
+
+OCTAVE_VERSION = mlabpy.VERSION + mlabpy.VERSION_EXTRA
 
 # Constants
 ###########
@@ -40,6 +41,7 @@ mod = lambda x, y: x % y
 strrep = str.replace
 size = lambda x: x.size
 sqrt = lambda x: math.sqrt(x)
+version = lambda: mlabpy.RELEASE + ' ' + mlabpy.VERSION + mlabpy.VERSION_EXTRA
 zeros = lambda *args: numpy.zeros(args)
 
 
@@ -89,9 +91,6 @@ def tic():
 
 def toc(interval=None):
     return time.clock() - (interval or _last_tick)
-
-def version():
-    return 'MLabPy 0.1'
 
 
 # Custom classes

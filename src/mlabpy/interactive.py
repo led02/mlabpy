@@ -9,15 +9,15 @@ import ast
 import cmd
 import importlib
 import traceback
+import types
 
 import mlabpy
-from mlabpy import lexer, loader, parser
+from mlabpy import conf, lexer, loader, parser
 
 class MlabInterpreter(cmd.Cmd):
     def __init__(self):
         super(MlabInterpreter, self).__init__()
         self.prompt = '=> '
-        self.intro = "MLabPy interactive console"
 
         self._stop = False
         self._echo = False
@@ -26,11 +26,10 @@ class MlabInterpreter(cmd.Cmd):
         self._parser = parser.new(start='stmt')
         self._modparser = None
         
-        self._globals = {
-            'load': self._load,
-            'exit': self._exit,
-            'opt': self._opt,
-        }
+        self._mod = types.ModuleType('__mlabpy__', 'Interpreter loop container')
+        self._mod.exit = self._exit
+        self._mod.load = self._load
+        self._mod.opt = self._opt
         
         for modname in mlabpy.autoload:
             self._import_mod(importlib.import_module(modname))
@@ -39,7 +38,7 @@ class MlabInterpreter(cmd.Cmd):
         for name, value in mod.__dict__.items():
             if name.startswith('_'):
                 continue
-            self._globals[name] = value
+            setattr(self._mod, name, value)
 
     def _exit(self):
         self._stop = True
@@ -56,7 +55,7 @@ class MlabInterpreter(cmd.Cmd):
         if name == 'echo':
             self._echo = value
         elif name == 'dump':
-            loader.OUTPUT_TREE = value
+            conf.LOADER_DUMP_TREE = value
     
     def onecmd(self, line):
         if line == 'EOF':
@@ -74,7 +73,7 @@ class MlabInterpreter(cmd.Cmd):
                         parser.dump(tree)
                     node = ast.Interactive([tree])
                     code = compile(node, filename='<mlapby>', mode='single')
-                    res = exec(code, self._globals)
+                    res = exec(code, self._mod.__dict__)
                     if res is not None:
                         print(res, file=self.stdout)
                 except parser.Parser.SyntaxError as e:

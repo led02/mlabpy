@@ -11,7 +11,7 @@ import ast
 import sys
 from ply import yacc
 
-from mlabpy import lexer
+from mlabpy import conf, lexer
 from builtins import isinstance
 import io
 
@@ -726,6 +726,8 @@ _parsers = {}
 
 def new(start='top'):
     if start not in _parsers:
+        if conf.DEBUG:
+            print("* Creating '{0}' parser...".format(start))
         muted_stderr, sys.stderr = sys.stderr, io.StringIO()
         _parsers[start] = yacc.yacc(start=start, module=_p, debug=0, tabmodule='mlab_' + start)
         sys.stderr = muted_stderr

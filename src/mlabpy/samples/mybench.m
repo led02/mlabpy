@@ -53,7 +53,6 @@ function res = mybench(varargin)
         'onlyTests',[]...
         );
     
-    disp(getargs)
     getargs(conf, varargin); 
   
     IS_OCTAVE = exist('OCTAVE_VERSION','builtin') > 0;

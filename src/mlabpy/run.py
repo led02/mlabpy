@@ -7,15 +7,23 @@ import argparse
 import os
 
 import mlabpy
-from mlabpy import interactive, loader, parser
+from mlabpy import conf, interactive, loader, parser
 
 argp = argparse.ArgumentParser(
     description="MlabPy runtime",
     epilog="If no files are passed, an interactive console will be presented."
 )
 argp.add_argument(
-    '-u', '--use', action='append',
-    help="Import given Python modules. (from foo import *)",
+    '-d', '--debug', action='store_true',
+    help="Enable debug output.",
+)
+argp.add_argument(
+    '-i', '--install', action='store_true',
+    help="Install import handler.",
+)
+argp.add_argument(
+    '-a', '--autoload', action='append',
+    help="Auto load given Python modules. (from foo import *)",
 )
 argp.add_argument(
     'files', nargs='*', metavar="FILE",
@@ -25,8 +33,19 @@ argp.add_argument(
 def main():
     args = argp.parse_args()
     
-    for use_arg in (args.use or []):
-        mlabpy.autoload.extend(use_arg.split(','))
+    if args.debug is not None:
+        conf.DEBUG = args.debug
+    
+    if not args.files:
+        print("{0} interactive console ({1})".format(mlabpy.RELEASE, mlabpy.VERSION + mlabpy.VERSION_EXTRA))
+        if conf.DEBUG:
+            print("* Starting...")
+    
+    for autoload_arg in (args.autoload or []):
+        mlabpy.autoload.extend(autoload_arg.split(','))
+    
+    if args.install:
+        loader.enable_matlab_import()
     
     if args.files:
         mparser = parser.new()

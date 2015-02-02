@@ -15,3 +15,7 @@ autoload = ['mlabpy.runtime.core', 'mlabpy.runtime.scipy']
 _env_autoload = os.getenv("MLABPY_AUTOLOAD")
 if _env_autoload:
     autoload.extend(map(str.strip, _env_autoload.split(',')))
+
+RELEASE = 'MlabPy'
+VERSION = '0.0.1'
+VERSION_EXTRA = 'dev-alpha'
