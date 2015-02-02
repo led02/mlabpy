@@ -3,6 +3,7 @@ MlabPy installation script (requires setuptools).
 
 Copyright (C) 2015, led02 <mlabpy@led-inc.eu>
 """
+#import setuptools
 from setuptools import setup, find_packages
 
 setup(
