@@ -9,6 +9,7 @@ Copyright (C) 2015, led02 <mlabpy@led-inc.eu>
 import ast
 import os
 import sys
+from importlib.util import module_for_loader
 from importlib.abc import Finder, Loader
 
 import mlabpy
@@ -85,6 +86,8 @@ class MatlabLoader(Loader):
         
         code = compile(mod, filename=self._filepath, mode="exec")
         exec(code, module.__dict__, module.__dict__)
+
+    load_module = module_for_loader(self.exec_module)
 
 # Stores the loader for re-use
 _matlab_loader = None
