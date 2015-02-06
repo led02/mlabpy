@@ -448,3 +448,6 @@ function defs = getargs(defs, varglist)
     for i=1:1:l/2
        defs.(varnames{i}) = varvalues{i};
     end     
+
+function main
+	mybench()

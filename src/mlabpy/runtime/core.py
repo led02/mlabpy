@@ -95,18 +95,6 @@ def toc(interval=None):
 
 # Custom classes
 ################
-class _end(object):
-    def __init__(self, offset=0):
-        self.offset = offset
-    
-    def __add__(self, other):
-        return _end(self.offset + other)
-    
-    def __sub__(self, other):
-        return _end(self.offset - other)
-
-end = _end()
-
 class matrix(object):
     def __init__(self, data):
         if len(data) >= 1 \
@@ -120,12 +108,7 @@ class matrix(object):
         and len(index) == 1:
             index = index[0]
         
-        if isinstance(index, _end):
-            if index.offset >= 0:
-                raise IndexError('end+{0}'.format(index.offset))
-            return self._data[index.offset]
-        else:
-            return self._data[index]
+        return self._data[index]
 
     def __setitem__(self, index, value):
         # TODO why is that
@@ -133,15 +116,7 @@ class matrix(object):
         and len(index) == 1:
             index = index[0]
         
-        if isinstance(index, _end):
-            if index.offset == 0:
-                self._data = numpy.concatenate((self._data, [value]))
-            elif index.offset < 0:
-                self._data[index.offset] = value
-            else:
-                raise IndexError('end+{0}'.format(index.offset))
-        else:
-            self._data[index] = value
+        self._data[index] = value
     
     def __len__(self):
         return len(self._data)
@@ -168,21 +143,4 @@ class struct(dict):
         self[name] = value
 
 class vector(list):
-    def __getitem__(self, index):
-        if isinstance(index, _end):
-            if index.offset >= 0:
-                raise IndexError('end+{0}'.format(index.offset))
-            return self[index.offset]
-        else:
-            return super(vector, self).__getitem__(index)
-    
-    def __setitem__(self, index, value):
-        if isinstance(index, _end):
-            if index.offset == 0:
-                self.append(value)
-            elif index.offset < 0:
-                self[index.offset] = value
-            else:
-                raise IndexError('end+{0}'.format(index.offset))
-        else:
-            super(vector, self).__setitem__(index, value)
+    pass

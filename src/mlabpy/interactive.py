@@ -12,7 +12,7 @@ import traceback
 import types
 
 import mlabpy
-from mlabpy import conf, lexer, loader, parser
+from mlabpy import conf, lexer, loader, parser, patch
 
 class MlabInterpreter(cmd.Cmd):
     def __init__(self):
@@ -72,6 +72,7 @@ class MlabInterpreter(cmd.Cmd):
                     if self._echo:
                         parser.dump(tree)
                     node = ast.Interactive([tree])
+                    patch.patcher.visit(node)
                     code = compile(node, filename='<mlapby>', mode='single')
                     res = exec(code, self._mod.__dict__)
                     if res is not None:

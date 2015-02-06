@@ -11,7 +11,7 @@ import ast
 import sys
 from ply import yacc
 
-from mlabpy import conf, lexer
+from mlabpy import conf, lexer, patch
 from builtins import isinstance
 import io
 
@@ -692,21 +692,7 @@ class Parser(object):
     def _new_name(self, p, name):
         return self._new_node(p, ast.Name, name, ast.Load())
     
-    def _patch_index(self, p, index):
-        if isinstance(index, ast.Index):
-            if isinstance(index.value, ast.Num): index.value.n -= 1
-            else: index.value = self._new_node(p, ast.BinOp, index.value, ast.Sub(), self._new_node(p, ast.Num, 1))
-        elif isinstance(index, ast.Slice):
-            if isinstance(index.lower, ast.Num): index.lower.n -= 1
-            elif index.lower is not None: index.lower = self._new_node(p, ast.BinOp, index.lower, ast.Sub(), self._new_node(p, ast.Num, 1))
-            if isinstance(index.upper, ast.Num): index.upper.n -= 1
-            elif index.upper is not None: index.upper = self._new_node(p, ast.BinOp, index.upper, ast.Sub(), self._new_node(p, ast.Num, 1))
-        elif isinstance(index, ast.ExtSlice):
-            for dim in index.dims:
-                self._patch_index(p, dim)
-    
     def _new_subscript(self, p, target, index):
-        self._patch_index(p, index)
         return self._new_node(p, ast.Subscript, target, index, ast.Load())
 
     def _new_list(self, p, data=None):
@@ -738,6 +724,7 @@ def parse(buf, filename=""):
     parser = new()
     l = lexer.new()
     p = parser.parse(buf, tracking=1, debug=0, lexer=l)
+    p = map(patch.patcher.visit, p)
     return p
 
 def dump(node, p='', outfile=sys.stdout):

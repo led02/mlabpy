@@ -8,6 +8,7 @@ import os
 
 import mlabpy
 from mlabpy import conf, interactive, loader, parser
+from traceback import print_tb
 
 argp = argparse.ArgumentParser(
     description="MlabPy runtime",
@@ -62,6 +63,8 @@ def main():
                         print(ret)
             except Exception as e:
                 print("Error.", e)
+                if conf.DEBUG:
+                    print_tb(e.__traceback__)
 
     else:
         interactive.MlabInterpreter().cmdloop()

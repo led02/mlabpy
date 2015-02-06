@@ -12,8 +12,7 @@ import sys
 from importlib.abc import Finder, Loader
 
 import mlabpy
-from mlabpy import conf, lexer, parser
-
+from mlabpy import conf, lexer, parser, patch
 
 class MatLabFinder(Finder):
     """
@@ -80,11 +79,13 @@ class MatlabLoader(Loader):
              + self._parser.parse(buf, lexer=lexer.new())
         
         mod = ast.Module(tree)
+        patch.patcher.visit(mod)
         if conf.LOADER_DUMP_TREE:
             parser.dump(mod, outfile=open(self._filepath + '.ast', 'w'))
         
         code = compile(mod, filename=self._filepath, mode="exec")
         exec(code, module.__dict__, module.__dict__)
+
 
 # Stores the loader for re-use
 _matlab_loader = None
@@ -94,7 +95,6 @@ def enable_matlab_import():
     Enable MlibPy's automatic import support. This method should be called
     before attempting to import any matlab modules.
     """
-    import sys
     global _matlab_loader
     
     if _matlab_loader is None:
