@@ -12,7 +12,7 @@ import sys
 from importlib.abc import Finder, Loader
 
 import mlabpy
-from mlabpy import conf, lexer, parser, patch
+from mlabpy import conf, lexer, parser, patch #, rules # Used for 2 pass mode
 
 class MatLabFinder(Finder):
     """
@@ -80,6 +80,10 @@ class MatlabLoader(Loader):
         
         mod = ast.Module(tree)
         patch.patcher.visit(mod)
+        # Two pass mode: Pythonize matlab stuff, then optimize
+#        patch.AstPatcher(rules.indices + rules.methods).visit(mod)
+#        patch.AstPatcher(rules.optimization).visit(mod)
+
         if conf.LOADER_DUMP_TREE:
             parser.dump(mod, outfile=open(self._filepath + '.ast', 'w'))
         

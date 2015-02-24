@@ -72,10 +72,18 @@ class AstPatcher(ast.NodeTransformer):
                 if conf.DEBUG:
                     print(rule.__class__.__name__)
                     print(':', ast.dump(node))
-                node = self._update(rule.replace, node, refs)
-                if conf.DEBUG:
-                    print('>', ast.dump(node))
-                break
+                if hasattr(rule, 'replace'):
+                    node = self._update(rule.replace, node, refs)
+                    if conf.DEBUG:
+                        print('>', ast.dump(node))
+                    break
+                elif hasattr(rule, 'eval'):
+                    new_node = rule.eval(node, refs)
+                    ast.copy_location(new_node, node)
+                    node = new_node
+                    if conf.DEBUG:
+                        print('>', ast.dump(node))
+                    break
         
         node = super(AstPatcher, self).generic_visit(node)
         return node

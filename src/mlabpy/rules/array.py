@@ -17,8 +17,12 @@ class ArrayIndexEnd(Rule):
 
 class ArrayIndexEndOffset(Rule):
     match = ast.BinOp(left=ast.Name(id="end"), op=ast.Sub(), right=ast.expr(ref="right"))
-    replace = ast.UnaryOp(op=ast.USub(), operand=ast.BinOp(left=ref("right"), op=ast.Add(), right=ast.Num(1)))
+    replace = ast.UnaryOp(op=ast.USub(), operand=ref("right"))
 
 class ArrayIndexEndAppend(Rule):
     match = ast.Assign(targets=[ast.Subscript(value=ast.Name(ref="target"), slice=ast.Index(value=ast.BinOp(left=ast.Name(id="end"), op=ast.Add(), right=ast.Num(1))))], value=ast.expr(ref="value"))
+    replace = ast.Assign(targets=[ref("target", ctx=ast.Store())], value=ast.Call(func=ast.Attribute(value=ast.Name(id="numpy", ctx=ast.Load()), attr="concatenate", ctx=ast.Load()), args=[ast.Tuple(elts=[ref("target"), ast.List(elts=[ref("value")], ctx=ast.Load())], ctx=ast.Load())], keywords=[]))
+
+class ArrayIndexEndAppendSlice(Rule):
+    match = ast.Assign(targets=[ast.Subscript(value=ast.Name(ref="target"), slice=ast.ExtSlice(dims=[ast.Index(value=ast.BinOp(left=ast.Name(id="end"), op=ast.Add(), right=ast.Num(1)))]))], value=ast.expr(ref="value"))
     replace = ast.Assign(targets=[ref("target", ctx=ast.Store())], value=ast.Call(func=ast.Attribute(value=ast.Name(id="numpy", ctx=ast.Load()), attr="concatenate", ctx=ast.Load()), args=[ast.Tuple(elts=[ref("target"), ast.List(elts=[ref("value")], ctx=ast.Load())], ctx=ast.Load())], keywords=[]))
